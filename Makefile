@@ -1,3 +1,6 @@
+verify: 
+	mvn clean verify
+	
 test:
 	mvn clean test
 	
