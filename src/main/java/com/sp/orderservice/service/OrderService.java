@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
     
     public void placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -35,8 +35,8 @@ public class OrderService {
 
         // Call inventory service to check if the product is available.
         // This is an example of synchronous call as we are using .block() method.
-        InventoryResponse[] inventoryResponseArray = webClient.get()
-                            .uri("http://localhost:8082/api/v1/inventory", uribuilder -> uribuilder.queryParam("skuCode", skuCodes).build())
+        InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
+                            .uri("http://inventory-service/api/v1/inventory", uribuilder -> uribuilder.queryParam("skuCode", skuCodes).build())
                             .retrieve()
                             .bodyToMono(InventoryResponse[].class)
                             .block();
