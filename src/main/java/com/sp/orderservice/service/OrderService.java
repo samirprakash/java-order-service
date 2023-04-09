@@ -24,11 +24,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
-    
-    public void placeOrder(OrderRequest orderRequest) {
+
+    public String placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
-        List<OrderLineItems> orderLineItems = orderRequest.getOrderLineItemsDTOList().stream().map(orderLineItemsDTO -> mapOrderLineItems(orderLineItemsDTO)).toList();
+        List<OrderLineItems> orderLineItems = orderRequest.getOrderLineItemsDTOList().stream()
+                .map(orderLineItemsDTO -> mapOrderLineItems(orderLineItemsDTO)).toList();
         order.setOrderLineItemsList(orderLineItems);
 
         List<String> skuCodes = order.getOrderLineItemsList().stream().map(OrderLineItems::getSkuCode).toList();
@@ -36,16 +37,18 @@ public class OrderService {
         // Call inventory service to check if the product is available.
         // This is an example of synchronous call as we are using .block() method.
         InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
-                            .uri("http://inventory-service/api/v1/inventory", uribuilder -> uribuilder.queryParam("skuCode", skuCodes).build())
-                            .retrieve()
-                            .bodyToMono(InventoryResponse[].class)
-                            .block();
-        
+                .uri("http://inventory-service/api/v1/inventory",
+                        uribuilder -> uribuilder.queryParam("skuCode", skuCodes).build())
+                .retrieve()
+                .bodyToMono(InventoryResponse[].class)
+                .block();
+
         boolean allProductsInStock = Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::isInStock);
         if (!allProductsInStock) {
             throw new IllegalArgumentException("Product is not in stock!");
         } else {
             orderRepository.save(order);
+            return "Order created";
         }
     }
 
