@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -11,6 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.sp.orderservice.dto.InventoryResponse;
 import com.sp.orderservice.dto.OrderLineItemsDTO;
 import com.sp.orderservice.dto.OrderRequest;
+import com.sp.orderservice.event.OrderPlacedEvent;
 import com.sp.orderservice.model.Order;
 import com.sp.orderservice.model.OrderLineItems;
 import com.sp.orderservice.repository.OrderRepository;
@@ -24,6 +26,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
+    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
 
     public String placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -48,6 +51,8 @@ public class OrderService {
             throw new IllegalArgumentException("Product is not in stock!");
         } else {
             orderRepository.save(order);
+            // send async event to notification service
+            kafkaTemplate.send("notificationTopic", new OrderPlacedEvent(order.getOrderNumber()));
             return "Order created";
         }
     }
