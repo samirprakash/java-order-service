@@ -9,3 +9,6 @@ build:
 
 server:
 	mvn spring-boot:run
+
+docker:
+	docker build -t order-service .

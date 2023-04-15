@@ -1,0 +1,12 @@
+.mvn
+.vscode
+.idea
+.dockerignore
+.gitignore
+Dockerfile
+HELP.md
+Makefile
+mvnw
+mvnw.cmd
+pom.xml
+README.md
